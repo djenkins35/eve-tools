@@ -1,0 +1,24 @@
+<?php
+
+
+echo("<pre>");
+var_dump($_POST);
+echo("</pre>");
+
+
+$dsn = 'mysql:host=localhost;dbname=evetest';
+$user = 'root';
+$pass = 'test';
+$options = array(
+    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+);
+
+$dbh = new PDO($dsn, $user, $pass, $options);
+
+
+foreach($dbh->query('SELECT * from APIKeyInfo') as $row)
+{
+	print_r($row);
+}
+
+?>

@@ -1,0 +1,233 @@
+<?php
+
+// http://wiki.eve-id.net/APIv2_Account_Characters_XML
+
+
+$_Character_URL = "https://api.eveonline.com/account/Characters.xml.aspx";
+
+
+function get_APIKeyInfo($id, $db_user, $db_pass, $db_name)
+{
+	$dsn = 'mysql:host=localhost;dbname=' . $db_name;
+	$options = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8');
+	
+	try {
+		$dbh = new PDO($dsn, $db_user, $db_pass, $options);
+		$row = $dbh->query('SELECT * from APIKeyInfo WHERE id = 1')->fetch();
+		$dbh = null;
+	}
+	catch (PDOException $e)
+	{
+		echo $e->getMessage();
+	}
+	
+	return $row;
+}
+
+function request_chars($keyID, $vCode, $url)
+{
+	$postvars = Array('keyID' =>$keyID, 'vCode' => $vCode);
+	
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_POST, 1);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postvars));
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	$output = curl_exec($ch);
+	curl_close($ch);
+
+	return $output;
+}
+
+function add_character($keyID, $db_user, $db_pass, $db_name, $name, $characterID, $corporationName,
+	$corporationID, $allianceID, $allianceName, $factionID, $factionName, $utc_time_added,
+	$currentTime, $cachedUntil)
+{
+	$dsn = 'mysql:host=localhost;dbname=' . $db_name;
+	$options = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8');
+	
+	try {
+		$dbh = new PDO($dsn, $db_user, $db_pass, $options);
+		
+		$count =  $dbh->exec("INSERT INTO `Characters` (
+				`keyID`,
+				`name`,
+				`characterID`,
+				`corporationName`,
+				`corporationID`,
+				`allianceID`,
+				`allianceName`,
+				`factionID`,
+				`factionName`,
+				`utc_time_added`,
+				`currentTime`,
+				`cachedUntil`)
+			VALUES (
+				'$keyID',
+				'$name',
+				'$characterID',
+				'$corporationName',
+				'$corporationID',
+				'$allianceID',
+				'$allianceName',
+				'$factionID',
+				'$factionName',
+				'$utc_time_added',
+				'$currentTime',
+				'$cachedUntil')");
+		
+		$dbh = null;
+	}
+	catch (PDOException $e)
+	{
+		echo $e->getMessage();
+	}
+	
+	return $count;
+}
+
+function parse_xml($keyID, $xml_string, $db_user, $db_pass, $db_name)
+{
+	$xml = simplexml_load_string($xml_string);
+	$count = 0;
+
+	foreach ($xml->result->rowset->row as $row)
+	{
+		$count += add_character(
+			$keyID,
+			$db_user,
+			$db_pass,
+			$db_name,
+			(string) $row['name'],
+			(int) $row['characterID'],
+			(string) $row['corporationName'],
+			(int) $row['corporationID'],
+			(int) $row['allianceID'],
+			(string) $row['allianceName'],
+			(int) $row['factionID'],
+			(string) $row['factionName'],
+			gmdate('Y-m-d H:i:s'),
+			(string) $xml->currentTime,
+			(string) $xml->cachedUntil
+		);
+	}
+	
+	return $count;
+}
+
+// helper function to return PDO for Character Table functions
+function get_chacter_rows($keyID, $db_user, $db_pass, $db_name)
+{
+	$dsn = 'mysql:host=localhost;dbname=' . $db_name;
+	$options = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8');
+	
+	try {
+		$dbh = new PDO($dsn, $db_user, $db_pass, $options);
+		$result = $dbh->query("SELECT * from `Characters` WHERE KeyID = '$keyID'");
+		$dbh = null;
+	}
+	catch (PDOException $e)
+	{
+		echo $e->getMessage();
+	}
+	
+	
+	return $result->fetchAll();
+}
+
+function assemble_output($character_rows, $rows_added)
+{
+	$output = "<?xml version='1.0' encoding='UTF-8'?>\n";
+	$output .= '<eveapi version="2"><rowset>';
+	
+	
+	foreach ($character_rows as $row)
+	{
+		$output .= '<row name="' . $row['name']
+			. '" characterID="' . $row['characterID']
+			. '" corporationName="' . $row['corporationName']
+			. '" corporationID="' . $row['corporationID']
+			. '" allianceID="' . $row['allianceID']
+			. '" allianceName="' . $row['allianceName']
+			. '" />';
+	}
+	
+	$output .= '</rowset>'
+		. '<rowsadded>' . $rows_added . '</rowsadded>'
+		. '</eveapi>';
+	
+	
+	return $output;
+}
+
+function isCached($character_rows)
+{
+	if (count($character_rows) == 0)
+	{
+		echo "no cached characters";
+		return false;
+	}
+	
+	$now = DateTime::createFromFormat('Y-m-d H:i:s', gmdate('Y-m-d H:i:s'));
+	
+	echo '<pre>';
+	
+	foreach ($character_rows as $row)
+	{
+		$cacheTime = DateTime::createFromFormat('Y-m-d H:i:s', $row['cachedUntil']);
+		
+		echo 'now:       ' . $now->format('Y-m-d H:i:s') . ' ' . $now->getTimeStamp() . "\n";
+		echo 'cacheTime: ' . $cacheTime->format('Y-m-d H:i:s') . ' ' . $cacheTime->getTimeStamp() . "\n\n\n";
+		
+		$diff = $cacheTime->getTimeStamp() - $now->getTimeStamp();
+		
+		echo 'diff: ' . $diff . "\n";
+		
+		if ($now > $cacheTime)
+		{
+			echo 'cache miss, past time';
+			return false;
+		}
+	}
+	
+	
+	echo 'still cached';
+	echo '</pre>';
+	
+	return true;
+}
+
+
+$db_user = 'root';
+$db_pass = 'test';
+$db_name = 'evetest';
+
+// get APIKeyInfo
+$APIKeyInfo_row = get_APIKeyInfo(1, $db_user, $db_pass, $db_name);
+$keyID = $APIKeyInfo_row['keyid'];
+$character_rows = get_chacter_rows($keyID, $db_user, $db_pass, $db_name);
+
+// check DB for cacheTime miss
+$rows_added = 0;
+
+if (!isCached($character_rows))
+{
+	/*
+	$xData = request_chars($keyID, $APIKeyInfo_row['vcode'], $_Character_URL);
+	$rows_added = parse_xml($keyID, $xData, $db_user, $db_pass, $db_name);
+	$character_rows = get_chacter_rows($keyID, $db_user, $db_pass, $db_name);
+	*/
+}
+
+$output = assemble_output($character_rows, $rows_added);
+
+
+/*header('Last-Modified: ' . gmdate("D,d M YH:i:s") . " GMT");
+header('Cache-Control: no-cache, must-revalidate');
+header('Pragma: no-cache');
+header('Content-Type: text/xml; charset=utf-8');
+echo $output;
+//*/
+
+?>

@@ -1,0 +1,101 @@
+
+html, body {
+	
+	font-family: ‘Lucida Sans Unicode’, ‘Lucida Grande’, sans-serif;
+	background-color: #aaaaaa;
+	margin: 0;
+	padding: 0;
+}
+
+li {
+
+	list-style-type: none;
+}
+
+table, th, td {
+
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+
+.hidden {
+
+	display: none;
+}
+
+.blurb {
+
+	display: inline-block;
+	margin: 5px;
+	padding: 5px;
+	border: 1px solid black;
+}
+
+#header {
+
+	background-color: #aaccaa;
+	height: 50px;
+	width: auto;
+	padding: 10px;
+	margin: 0px;
+}
+
+#main_content {
+
+	margin: 10px;
+	background-color: #8888aa;
+	width: 90%;
+	min-height: 50px;
+}
+
+#option_panel {
+
+	float: left;
+}
+
+#option_panel li {
+
+	display: inline;
+	margin: 5px;
+}
+
+#login_links {
+
+	float: right;
+}
+#login_links li {
+
+	float: left;
+	margin: 0px 10px;
+}
+
+#logged_in_dia {
+
+	float: right;
+	/*margin: 0px 10px;*/
+}
+
+#reg_form_div, #login_form_div {
+
+	position: absolute;
+	background-color: #888888;
+	top: 50px;
+	right: 0px;
+	width: 200px;
+	padding: 5px;
+}
+
+#reg_form_div input, #login_form_div input {
+
+	width: 90%;
+	margin: 5px;
+}
+
+#XHR_messagelog {
+
+	background-color: #888888;
+	width: 90%;
+	height: 50px;
+	padding: 5px;
+	margin: 10px;
+}

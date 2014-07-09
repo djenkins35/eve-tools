@@ -31,6 +31,52 @@ table, th, td {
 	border: 1px solid black;
 }
 
+.location_container {
+	
+	background-color: green;
+}
+
+.asset_container {
+	
+	background-color: grey;
+}
+
+.location_container td:first-of-type {
+
+	padding-left: 15px;
+	background-image: url(images/arrow_right.png);
+	background-repeat: no-repeat;
+	background-position: 2px 50%;
+}
+
+.asset_container td:first-of-type {
+
+	padding-left: 25px;
+	background-image: url(images/arrow_right.png);
+	background-repeat: no-repeat;
+	background-position: 12px 50%;
+}
+
+.asset_item {
+
+	background-color: white;
+}
+
+.asset_item td:first-of-type {
+
+	padding-left: 10px;
+}
+
+.sub_item {
+	
+	background-color: brown;
+}
+
+.sub_item td:first-of-type {
+
+	padding-left: 35px;
+}
+
 #header {
 
 	background-color: #aaccaa;
@@ -63,6 +109,7 @@ table, th, td {
 
 	float: right;
 }
+
 #login_links li {
 
 	float: left;

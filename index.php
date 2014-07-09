@@ -16,6 +16,7 @@
 	<div id="header">
 		
 		<ul id="option_panel" class="hidden">
+			<li><a href="#" id="home_link">home</a></li>
 			<li><a href="#" id="add_API">add API key</a></li>
 			<li><a href="#" id="char_select">select characters</a></li>
 			<li><a href="#" id="">skill queues</a></li>
@@ -95,8 +96,8 @@
 			<table id="asset_table">
 				<tr>
 					<th>Item Name</th>
-					<th>Location</th>
 					<th>Quantity</th>
+					<th>Value</th>
 				</tr>
 			</table>
 		</div>

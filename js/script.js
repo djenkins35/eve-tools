@@ -385,7 +385,7 @@ function createAssetDOM(aLocations)
 				{
 					if (state == 'open')
 						$(this).hide();
-					else
+					else if (!$(this).hasClass('sub_item'))
 						$(this).show();
 				}
 			});
